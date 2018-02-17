@@ -1,0 +1,147 @@
+<html>
+	  <head>
+		<!--Load the AJAX API-->
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script type="text/javascript">
+		// Load the Visualization API and the piechart package.
+		google.charts.load('current', {'packages':['corechart']});
+		// Callback that creates and populates a data table, 
+		// instantiates the pie chart, passes in the data and
+		// draws it.
+		function drawLine(location, date, file) {
+			//ajax call to get data
+			$.ajax({
+				url: file,
+				dataType: 'xml',
+				success: function(xml){
+					//setup new datatable object and add columns to it
+					var data = new google.visualization.DataTable();
+					data.addColumn('timeofday', 'Time');
+					data.addColumn('number', 'NO2 Levels');
+					//get all readings from xml document fetched by ajax
+					var readings = xml.getElementsByTagName("reading");
+					//loop over readings
+					for (var i=0; i< readings.length;i++){
+						//if reading matches date chosen then get attributes
+						if(readings[i].getAttribute("date")==date){
+							//parse time into google chart formatted time
+							var time = readings[i].getAttribute("time");
+							var t = time.split(":");
+							var ntime=[parseInt(t[0]), parseInt(t[1]), parseInt(t[2])];
+							var val = readings[i].getAttribute("val");
+							//add data to datatable object
+							data.addRow([ntime, parseInt(val)]);
+						}
+						
+					}
+					//sort rows to get times in order
+					data.sort({column:0})
+					 // Set chart options
+					var options = {'title':'NO2 levels in '+location+' on '+date,
+									'width':1000,
+									'height':500};
+					// draw chart
+					var chart = new google.visualization.LineChart(document.getElementById('line_div'));
+					chart.draw(data, options);
+				}
+			});
+		}
+		
+		function drawScatter(){
+			
+		}
+		
+		function submit_chart(chart){
+			//get values from form
+			var drop = chart+"_drop";
+			var date_input = chart+"_date";
+			var e = document.getElementById(drop)[document.getElementById(drop).options.selectedIndex];
+			var location = e.innerHTML;
+			var file = e.value;
+			//reformat date to same as xml data
+			var date = document.getElementById(date_input).value;
+			var from = date.split("-");
+			var f = from[2]+"/"+from[1]+"/"+from[0];
+			//draw line chart
+			switch(chart){
+				case 'line':
+					drawLine(location, f, file);
+					break;
+				case 'scatter':
+					drawScatter(location, f, file);
+					break;
+			}
+		}
+		
+		
+		function limit_date(input_box, dropdown){
+			//get dropdown box value and date input element
+			var id = document.getElementById(dropdown)[document.getElementById(dropdown).options.selectedIndex].id;
+			var date_input = document.getElementById(input_box);
+			//switch dropdown value
+			switch(id){
+				case 'brislington':
+					date_input.min="2016-03-31";
+					date_input.max="2017-02-13";
+					break;
+				case 'fishponds':
+					date_input.min="2014-11-13";
+					date_input.max="2017-02-13";
+					break;
+				case 'parson_st':
+					date_input.min="2014-11-13";
+					date_input.max="2017-02-13";
+					break;
+				case 'rupert_st':
+					date_input.min="2014-11-29";
+					date_input.max="2016-02-13";
+					break;
+				case 'wells_rd':
+					date_input.min="2014-11-13";
+					date_input.max="2017-02-13";
+					break;
+				case 'newfoundland_way':
+					date_input.min="2014-11-13";
+					date_input.max="2016-02-03";
+					break;
+			}
+		}
+		/* ////////////////////////////////////////
+		do scatter plot
+		//////////////////////////////////////// */
+		</script>
+	</head>
+
+	<body>
+		<h3>Line Chart</h3>
+		<select id="line_drop" onchange="limit_date('line_date', 'line_drop')">
+			<option value="brislington_no2.xml" id="brislington">Brislington</option>
+			<option value="fishponds_no2.xml" id="fishponds">Fishponds</option>
+			<option value="parson_st_no2.xml" id="parson_st">Parson Street</option>
+			<option value="rupert_st_no2.xml" id="rupert_st">Rupert Street</option>
+			<option value="wells_rd_no2.xml" id="wells_rd">Wells Road</option>
+			<option value="newfoundland_way_no2.xml" id="newfoundland_way">Newfoundland Way</option>
+		</select>
+		Date: <input type=date id="line_date" value="2017-02-13"></input>
+		<button type=submit value="Submit" onclick=submit_chart('line')>Submit</button>
+		<div id="line_div" style="width:1000; height:500"></div><hr/>
+		<h3>Scatter Plot</h3>
+		<select id="scatter_drop" onchange="limit_date('scatter_date', 'scatter_drop')">
+			<option value="brislington_no2.xml" id="brislington">Brislington</option>
+			<option value="fishponds_no2.xml" id="fishponds">Fishponds</option>
+			<option value="parson_st_no2.xml" id="parson_st">Parson Street</option>
+			<option value="rupert_st_no2.xml" id="rupert_st">Rupert Street</option>
+			<option value="wells_rd_no2.xml" id="wells_rd">Wells Road</option>
+			<option value="newfoundland_way_no2.xml" id="newfoundland_way">Newfoundland Way</option>
+		</select>
+		Date: <input type=date id="scatter_date" value="2017-02-13"></input>
+		<button type=submit value="Submit" onclick=submit_chart('scatter')>Submit</button>
+		<div id="Scatter_div" style="width:400; height:300"></div>
+	</body>
+	<script>
+		//limit date inputs on page load
+		limit_date('line_date','line_drop');
+		limit_date('scatter_date','scatter_drop');
+	</script>
+</html>

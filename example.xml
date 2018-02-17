@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data type="nitrogen dioxide">
+    <location id="wells road" lat="51.427" long="-2.568">
+        <reading date="13/02/2016" time="03:15:00" val="11"/>
+        <reading date="13/02/2016" time="03:30:00" val="11"/>
+        <reading date="13/02/2016" time="03:45:00" val="11"/>
+        <reading date="13/02/2017" time="16:15:00" val="35"/>
+
+    </location>
+</data>
