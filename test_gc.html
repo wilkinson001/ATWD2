@@ -48,8 +48,66 @@
 			});
 		}
 		
-		function drawScatter(){
-			
+		function drawScatter(location, year, file){
+			$.ajax({
+				url: file,
+				dataType: 'xml',
+				success: function(xml){
+					var data_raw = [];
+					var data_array = [
+						[{label: 'Date', id: 'date', type: 'date'},{label: 'NO2 Levels', id: 'no2', type: 'number'}]
+					];
+					//get all readings from xml document fetched by ajax
+					var readings = xml.getElementsByTagName("reading");
+					//loop over readings
+					for (var i=0; i< readings.length;i++){
+						//if reading matches year chosen then get attributes
+						var readings_date = readings[i].getAttribute("date")
+						var readings_year=readings_date.substring(readings_date.lastIndexOf("/")+1,readings_date.length);
+						if(readings_year==year){
+						//average values by day
+							//parse date into Javascript formatted date
+							var date = readings[i].getAttribute("date");
+							var val = readings[i].getAttribute("val");
+							//add data to raw array for future parsing
+							data_raw.push([date , parseInt(val)]);
+						}
+					}
+					//get unique dates from data
+					var data_dates=[];
+					for(i=0;i<data_raw.length;i++){
+						if(!data_dates.includes(data_raw[i][0])){
+							data_dates.push(data_raw[i][0]);
+						}
+					}
+					//for each date get value and count of readings
+					for(i=0;i<data_dates.length;i++){
+						var count=0;
+						var val=0;
+						for(z=0;z<data_raw.length;z++){
+							if(data_raw[z][0]==data_dates[i]){
+								val+=data_raw[z][1]
+								count++;
+							}
+						}
+						//push average value for each day
+						var t = data_dates[i].split("/");
+						data_array.push([new Date(t[2], t[1]-1, t[0]),val/count])
+					}
+					//setup new datatable object and add columns to it
+					var data = new google.visualization.arrayToDataTable(data_array);
+					//sort rows to get times in order
+					data.sort({column:0})
+					console.log(data);
+					 // Set chart options
+					var options = {'title':'NO2 levels in '+location+' in '+readings_year,
+									'width':1000,
+									'height':500};
+					// draw chart
+					var chart = new google.visualization.ScatterChart(document.getElementById('scatter_div'));
+					chart.draw(data, options);
+				}
+			});
 		}
 		
 		function submit_chart(chart){
@@ -60,16 +118,18 @@
 			var location = e.innerHTML;
 			var file = e.value;
 			//reformat date to same as xml data
-			var date = document.getElementById(date_input).value;
-			var from = date.split("-");
-			var f = from[2]+"/"+from[1]+"/"+from[0];
+			
 			//draw line chart
 			switch(chart){
 				case 'line':
+					var date = document.getElementById(date_input).value;
+					var from = date.split("-");
+					var f = from[2]+"/"+from[1]+"/"+from[0];
 					drawLine(location, f, file);
 					break;
 				case 'scatter':
-					drawScatter(location, f, file);
+					var year = document.getElementById(date_input).value;
+					drawScatter(location, year, file);
 					break;
 			}
 		}
@@ -110,6 +170,63 @@
 		/* ////////////////////////////////////////
 		do scatter plot
 		//////////////////////////////////////// */
+		function year_limit(){
+			var x = document.getElementById("scatter_date");
+			var id = document.getElementById("scatter_drop")[document.getElementById("scatter_drop").options.selectedIndex].id;
+			while (x.getElementsByTagName("option")[0]){
+				x.removeChild(x.getElementsByTagName("option")[0]);
+			}
+			switch(id){
+				case 'brislington':
+					var z = ["2016","2017"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+				case 'fishponds':
+					var z = ["2014","2015","2016","2017"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+				case 'parson_st':
+					var z = ["2014","2015","2016","2017"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+				case 'rupert_st':
+					var z = ["2014","2015","2016"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+				case 'wells_rd':
+					var z = ["2014","2015","2016","2017"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+				case 'newfoundland_way':
+					var z = ["2014","2015","2016"];
+					for( i =0; i<z.length;i++){
+						var option=document.createElement("option");
+						option.text = z[i];
+						x.add(option);
+					}
+					break;
+			}
+		}
 		</script>
 	</head>
 
@@ -127,7 +244,7 @@
 		<button type=submit value="Submit" onclick=submit_chart('line')>Submit</button>
 		<div id="line_div" style="width:1000; height:500"></div><hr/>
 		<h3>Scatter Plot</h3>
-		<select id="scatter_drop" onchange="limit_date('scatter_date', 'scatter_drop')">
+		<select id="scatter_drop" onchange="year_limit()">
 			<option value="brislington_no2.xml" id="brislington">Brislington</option>
 			<option value="fishponds_no2.xml" id="fishponds">Fishponds</option>
 			<option value="parson_st_no2.xml" id="parson_st">Parson Street</option>
@@ -135,13 +252,15 @@
 			<option value="wells_rd_no2.xml" id="wells_rd">Wells Road</option>
 			<option value="newfoundland_way_no2.xml" id="newfoundland_way">Newfoundland Way</option>
 		</select>
-		Date: <input type=date id="scatter_date" value="2017-02-13"></input>
+		Year:
+		<select id="scatter_date">
+		</select>
 		<button type=submit value="Submit" onclick=submit_chart('scatter')>Submit</button>
-		<div id="Scatter_div" style="width:400; height:300"></div>
+		<div id="scatter_div" style="width:400; height:300"></div>
 	</body>
 	<script>
 		//limit date inputs on page load
 		limit_date('line_date','line_drop');
-		limit_date('scatter_date','scatter_drop');
+		year_limit();
 	</script>
 </html>
