@@ -4,6 +4,7 @@
 		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 		<script type="text/javascript">
+		
 		// Load the Visualization API and the piechart package.
 		google.charts.load('current', {'packages':['corechart']});
 		// Callback that creates and populates a data table, 
@@ -39,8 +40,8 @@
 					data.sort({column:0})
 					 // Set chart options
 					var options = {'title':'NO2 levels in '+location+' on '+date,
-									'width':1000,
-									'height':500};
+									'width':1500,
+									'height':700};
 					// draw chart
 					var chart = new google.visualization.LineChart(document.getElementById('line_div'));
 					chart.draw(data, options);
@@ -100,9 +101,9 @@
 					data.sort({column:0})
 					console.log(data);
 					 // Set chart options
-					var options = {'title':'NO2 levels in '+location+' in '+readings_year,
-									'width':1000,
-									'height':500};
+					var options = {'title':'NO2 levels in '+location+' in '+year,
+									'width':1500,
+									'height':700};
 					// draw chart
 					var chart = new google.visualization.ScatterChart(document.getElementById('scatter_div'));
 					chart.draw(data, options);
@@ -227,6 +228,44 @@
 					break;
 			}
 		}
+		
+		function draw_map(){
+			google.charts.load('current', { 'packages': ['map'] , "mapsApiKey": "AIzaSyC8N9Cho2hCOawj-KJbzEwp7c_jDmV3oH8"});
+			google.charts.setOnLoadCallback(drawMap);
+			function drawMap(){
+				data = new google.visualization.DataTable();
+				data.addColumn('number','Lat');
+				data.addColumn('number','Long');
+				data.addColumn('string','Name');
+				//all file names
+				file=["brislington_no2.xml","fishponds_no2.xml","parson_st_no2.xml","rupert_st_no2.xml","wells_rd_no2.xml","newfoundland_way_no2.xml"	];
+				$.when(
+					$.ajax({url: file[0],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
+					$.ajax({url: file[1],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
+					$.ajax({url: file[2],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
+					$.ajax({url: file[3],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
+					$.ajax({url: file[4],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
+					$.ajax({url: file[5],dataType: 'xml'}).done(function(xml){getLocation(xml)})
+				).done(function(){
+					var options = {
+						showTooltip: true,
+						showInfoWindow: true
+					};
+					var map = new google.visualization.Map(document.getElementById('map_div'));
+					map.draw(data, options);
+				});
+				
+			}
+		}
+		function getLocation(xml){
+			var locations = xml.getElementsByTagName("location");
+			console.log(locations);
+			var lat = locations[0].getAttribute("lat");
+			var lng = locations[0].getAttribute("long");
+			var raw_data=[parseFloat(lat), parseFloat(lng), locations[0].getAttribute("id")];
+			data.addRow(raw_data);
+		}
+		draw_map();
 		</script>
 	</head>
 
@@ -242,7 +281,7 @@
 		</select>
 		Date: <input type=date id="line_date" value="2017-02-13"></input>
 		<button type=submit value="Submit" onclick=submit_chart('line')>Submit</button>
-		<div id="line_div" style="width:1000; height:500"></div><hr/>
+		<div id="line_div" style="width:1500; height:500"></div><hr/>
 		<h3>Scatter Plot</h3>
 		<select id="scatter_drop" onchange="year_limit()">
 			<option value="brislington_no2.xml" id="brislington">Brislington</option>
@@ -256,7 +295,9 @@
 		<select id="scatter_date">
 		</select>
 		<button type=submit value="Submit" onclick=submit_chart('scatter')>Submit</button>
-		<div id="scatter_div" style="width:400; height:300"></div>
+		<div id="scatter_div" style="width:1500; height:500"></div>
+		
+		<div id="map_div" style="width:1500; height:500"></div>
 	</body>
 	<script>
 		//limit date inputs on page load

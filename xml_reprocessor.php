@@ -28,48 +28,47 @@ for($i=0; $i<$arr_len; $i++){
 	while($xml->read()){
 		##PROCESSING##
 		#check if element name is row
-		if($xml->nodeType == XMLReader::ELEMENT){
-			if('row'===$xml->name){
-				#move to child
-				#only match 5 times to force reader to next record
-				$x=0;
-				while($xml->read() && $x<5){
-					#check if node matches type and set var
-					if('lat'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
-						$lat=$xml->getAttribute("val");
-						$x++;
-					}else if('long'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
-						$long=$xml->getAttribute("val");
-						$x++;
-					}else if('date'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
-						$date=$xml->getAttribute("val");
-						$x++;
-					}else if('time'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
-						$time=$xml->getAttribute("val");
-						$x++;
-					}else if('no2'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
-						$val=$xml->getAttribute("val");
-						$x++;
-					}
+		if($xml->nodeType == XMLReader::ELEMENT && 'row'===$xml->name){
+			#move to child
+			#only match 5 times to force reader to next record
+			$x=0;
+			while($xml->read() && $x<5){
+				#check if node matches type and set var
+				if('lat'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
+					$lat=$xml->getAttribute("val");
+					$x++;
+				}else if('long'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
+					$long=$xml->getAttribute("val");
+					$x++;
+				}else if('date'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
+					$date=$xml->getAttribute("val");
+					$x++;
+				}else if('time'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
+					$time=$xml->getAttribute("val");
+					$x++;
+				}else if('no2'===$xml->name && $xml->nodeType == XMLReader::ELEMENT){
+					$val=$xml->getAttribute("val");
+					$x++;
 				}
-				#if first record then write out lat and long
-				if($counter==0){
-					$doc->writeAttribute('lat',$lat);
-					$doc->writeAttribute('long',$long);
-					$counter=1;
-				}
-				#write reading element
-				$doc->startElement('reading');
-				$doc->writeAttribute('date',$date);
-				$doc->writeAttribute('time',$time);
-				$doc->writeAttribute('val',$val);
-				$doc->endElement();
 			}
+			#if first record then write out lat and long
+			if($counter==0){
+				$doc->writeAttribute('lat',$lat);
+				$doc->writeAttribute('long',$long);
+				$counter=1;
+			}
+			#write reading element
+			$doc->startElement('reading');
+			$doc->writeAttribute('date',$date);
+			$doc->writeAttribute('time',$time);
+			$doc->writeAttribute('val',$val);
+			$doc->endElement();
 		}
 	}
 	#end location and data tags
 	$doc->endElement();
 	$doc->endElement();
+	$doc->endDocument();
 	$xml->close();
 	echo("Finished Processing ".$files[$i]."<br/><br/>");
 }
