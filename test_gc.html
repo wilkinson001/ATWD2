@@ -41,7 +41,7 @@
 					 // Set chart options
 					var options = {'title':'NO2 levels in '+location+' on '+date,
 									'width':1500,
-									'height':700};
+									'height':500};
 					// draw chart
 					var chart = new google.visualization.LineChart(document.getElementById('line_div'));
 					chart.draw(data, options);
@@ -103,7 +103,7 @@
 					 // Set chart options
 					var options = {'title':'NO2 levels in '+location+' in '+year,
 									'width':1500,
-									'height':700};
+									'height':500};
 					// draw chart
 					var chart = new google.visualization.ScatterChart(document.getElementById('scatter_div'));
 					chart.draw(data, options);
@@ -168,18 +168,21 @@
 					break;
 			}
 		}
-		/* ////////////////////////////////////////
-		do scatter plot
-		//////////////////////////////////////// */
+		//limits year in dropdown menu
 		function year_limit(){
+			//get selection boxes
 			var x = document.getElementById("scatter_date");
 			var id = document.getElementById("scatter_drop")[document.getElementById("scatter_drop").options.selectedIndex].id;
+			//remove current dates
 			while (x.getElementsByTagName("option")[0]){
 				x.removeChild(x.getElementsByTagName("option")[0]);
 			}
+			//switch on location, all cases are the same with different options
 			switch(id){
 				case 'brislington':
+					//valid years
 					var z = ["2016","2017"];
+					//loop and create option for valid years
 					for( i =0; i<z.length;i++){
 						var option=document.createElement("option");
 						option.text = z[i];
@@ -228,11 +231,12 @@
 					break;
 			}
 		}
-		
+		//extended visualisations
 		function draw_map(){
 			google.charts.load('current', { 'packages': ['map'] , "mapsApiKey": "AIzaSyC8N9Cho2hCOawj-KJbzEwp7c_jDmV3oH8"});
 			google.charts.setOnLoadCallback(drawMap);
 			function drawMap(){
+				//crate datetable
 				data = new google.visualization.DataTable();
 				data.addColumn('number','Lat');
 				data.addColumn('number','Long');
@@ -240,6 +244,7 @@
 				//all file names
 				file=["brislington_no2.xml","fishponds_no2.xml","parson_st_no2.xml","rupert_st_no2.xml","wells_rd_no2.xml","newfoundland_way_no2.xml"	];
 				$.when(
+					//load all files in order
 					$.ajax({url: file[0],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
 					$.ajax({url: file[1],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
 					$.ajax({url: file[2],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
@@ -247,6 +252,7 @@
 					$.ajax({url: file[4],dataType: 'xml'}).done(function(xml){getLocation(xml)}),
 					$.ajax({url: file[5],dataType: 'xml'}).done(function(xml){getLocation(xml)})
 				).done(function(){
+					//when all files have loaded
 					var options = {
 						showTooltip: true,
 						showInfoWindow: true
@@ -258,11 +264,13 @@
 			}
 		}
 		function getLocation(xml){
+			//get attributes
 			var locations = xml.getElementsByTagName("location");
 			console.log(locations);
 			var lat = locations[0].getAttribute("lat");
 			var lng = locations[0].getAttribute("long");
 			var raw_data=[parseFloat(lat), parseFloat(lng), locations[0].getAttribute("id")];
+			//add row
 			data.addRow(raw_data);
 		}
 		draw_map();
